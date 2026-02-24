@@ -1,7 +1,10 @@
 import "dotenv/config";
 
+import fastifySwagger from "@fastify/swagger";
+import fastifySwaggerUI from "@fastify/swagger-ui";
 import Fastify from "fastify";
 import {
+  jsonSchemaTransform,
   serializerCompiler,
   validatorCompiler,
   ZodTypeProvider,
@@ -15,9 +18,25 @@ const app = Fastify({
 app.setValidatorCompiler(validatorCompiler);
 app.setSerializerCompiler(serializerCompiler);
 
-/*app.get("/", function (request, reply) {
-  reply.send({ hello: "world" });
-});*/
+await app.register(fastifySwagger, {
+  openapi: {
+    info: {
+      title: "Yamada Training API",
+      description: "API for Yamada Training",
+      version: "1.0.0",
+    },
+    servers: [
+      {
+        url: "http://localhost:8081",
+      },
+    ],
+  },
+  transform: jsonSchemaTransform,
+});
+
+await app.register(fastifySwaggerUI, {
+  routePrefix: "/docs",
+});
 
 app.withTypeProvider<ZodTypeProvider>().route({
   method: "GET",
@@ -36,7 +55,7 @@ app.withTypeProvider<ZodTypeProvider>().route({
   },
 });
 
-app.listen({ port: Number(process.env.PORT) || 8081 }, function (err, address) {
+app.listen({ port: Number(process.env.PORT) || 8081 }, function (err) {
   if (err) {
     app.log.error(err);
     process.exit(1);
