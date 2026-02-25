@@ -1,0 +1,147 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id            String        @id
+  workoutPlans  WorkoutPlan[]
+  name          String
+  email         String
+  emailVerified Boolean       @default(false)
+  image         String?
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+  sessions      Session[]
+  accounts      Account[]
+
+  @@unique([email])
+  @@map("user")
+}
+
+// Representa o usuário do aplicativo. 
+// Cada usuário pode ter vários planos de treino (WorkoutPlan), sessões de login (Session) e contas vinculadas (Account).
+// É a entidade principal que conecta todas as outras tabelas relacionadas ao treino e autenticação.
+
+model WorkoutPlan {
+  id          String       @id @default(uuid())
+  name        String
+  userId      String
+  user        User         @relation(fields: [userId], references: [id])
+  workoutDays WorkoutDay[]
+  isActive    Boolean      @default(true)
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+}
+
+// Representa um plano de treino criado por um usuário.
+// Está relacionado diretamente ao User (um usuário pode ter vários planos).
+// Cada plano contém vários dias de treino (WorkoutDay).
+
+enum WeekDay {
+  MONDAY
+  TUESDAY
+  WEDNESDAY
+  THURSDAY
+  FRIDAY
+  SATURDAY
+  SUNDAY
+}
+
+// Enum que define os dias da semana.
+// Usado para organizar os treinos dentro de um plano (WorkoutDay).
+
+model WorkoutDay {
+  id            String            @id @default(uuid())
+  name          String
+  workoutPlanId String
+  workoutPlan   WorkoutPlan       @relation(fields: [workoutPlanId], references: [id])
+  isRest        Boolean           @default(false)
+  weekDay       WeekDay
+  exercises     WorkoutExercise[]
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime          @updatedAt
+}
+
+// Representa um dia específico dentro de um plano de treino.
+// Está vinculado a um WorkoutPlan e pode conter vários exercícios (WorkoutExercise).
+// Pode ser marcado como dia de descanso (isRest).
+
+model WorkoutExercise {
+  id                String     @id @default(uuid())
+  name              String
+  order             Int
+  workoutDayId      String
+  workoutDay        WorkoutDay @relation(fields: [workoutDayId], references: [id])
+  sets              Int
+  reps              Int
+  restTimeInSeconds Int
+  createdAt         DateTime   @default(now())
+  updatedAt         DateTime   @updatedAt
+}
+
+// Representa um exercício dentro de um dia de treino (WorkoutDay).
+// Contém informações como número de séries (sets), repetições (reps) e tempo de descanso.
+// Está diretamente relacionado a WorkoutDay.
+
+model Session {
+  id        String   @id
+  expiresAt DateTime
+  token     String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  ipAddress String?
+  userAgent String?
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([token])
+  @@index([userId])
+  @@map("session")
+}
+
+// Representa uma sessão de login/autenticação do usuário.
+// Está vinculada ao User e guarda informações como token, IP e userAgent.
+// Usada para controle de acesso e segurança.
+
+model Account {
+  id                    String    @id
+  accountId             String
+  providerId            String
+  userId                String
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  accessToken           String?
+  refreshToken          String?
+  idToken               String?
+  accessTokenExpiresAt  DateTime?
+  refreshTokenExpiresAt DateTime?
+  scope                 String?
+  password              String?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  @@index([userId])
+  @@map("account")
+}
+
+// Representa uma conta vinculada ao usuário (ex: login via Google, Facebook ou conta própria).
+// Está relacionada ao User e guarda tokens de autenticação e informações de acesso.
+
+model Verification {
+  id         String   @id
+  identifier String
+  value      String
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([identifier])
+  @@map("verification")
+}
+
+// Representa códigos de verificação (ex: email, senha temporária, recuperação de conta).
+// Não está diretamente ligado ao User, mas serve para processos de autenticação e segurança.
