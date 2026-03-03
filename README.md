@@ -61,7 +61,7 @@ A robust and modern API for workout plan and routine management, built with Fast
 1. **Clone the repository**
 
 ```bash
-git clone <your-repository-url>
+git clone https://github.com/YudiYamada/yamada-training-api
 cd yamada-training
 
 ```
