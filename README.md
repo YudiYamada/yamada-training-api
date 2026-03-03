@@ -1,251 +1,255 @@
+Here is the professional English version of your README, optimized for GitHub and Notion.
+
+---
+
 # 🏋️ Yamada Training
 
-Uma API robusta e moderna para gerenciamento de planos e rotinas de treino, construída com Fastify, Prisma, TypeScript e Better Auth.
+A robust and modern API for workout plan and routine management, built with Fastify, Prisma, TypeScript, and Better Auth.
 
-![Node Version](https://img.shields.io/badge/node-24.x-green)
-![TypeScript](https://img.shields.io/badge/TypeScript-5.9+-blue)
-![License](https://img.shields.io/badge/license-ISC-blue)
+## 📋 Description
 
-## 📋 Descrição
+**Yamada Training** is a professional REST API designed to manage:
 
-**Yamada Training** é uma API REST profissional para gerenciar:
+- Users and secure authentication (Better Auth)
+- Personalized workout plans
+- Exercise routines organized by day of the week
+- Exercise sets with specific reps and weight tracking
+- Email verification system
+- Session management and linked accounts
 
-- Usuários e autenticação segura (Better Auth)
-- Planos de treino personalizados
-- Rotinas de exercícios por dia da semana
-- Conjunto de exercícios com repetições e séries
-- Sistema de verificação de email
-- Gerenciamento de sessões e contas vinculadas
+## 🚀 Tech Stack
 
-## 🚀 Tecnologias Utilizadas
+- **[Fastify](https://www.fastify.io/)** - High-performance HTTP framework
+- **[Prisma](https://www.prisma.io/)** - Modern ORM for Node.js and TypeScript
+- **[TypeScript](https://www.typescriptlang.org/)** - Static and type-safe development
+- **[Better Auth](https://www.better-auth.com/)** - Complete authentication and authorization
+- **[Zod](https://zod.dev/)** - TypeScript-first schema validation
+- **[PostgreSQL](https://www.postgresql.org/)** - Relational database
+- **[Docker Compose](https://docs.docker.com/compose/)** - Containerization
 
-- **[Fastify](https://www.fastify.io/)** - Framework HTTP de alta performance
-- **[Prisma](https://www.prisma.io/)** - ORM modern para Node.js e TypeScript
-- **[TypeScript](https://www.typescriptlang.org/)** - Tipagem estática e segura
-- **[Better Auth](https://www.better-auth.com/)** - Autenticação e autorização
-- **[Zod](https://zod.dev/)** - Validação de esquemas TypeScript-first
-- **[PostgreSQL](https://www.postgresql.org/)** - Banco de dados relacional
-- **[Docker Compose](https://docs.docker.com/compose/)** - Containerização
-
-## 📦 Dependências
+## 📦 Dependencies
 
 ### Runtime
 
-- `@prisma/client` - Cliente Prisma
-- `@prisma/adapter-pg` - Adapter PostgreSQL para Prisma
-- `fastify` - Framework web
+- `@prisma/client` - Prisma Client
+- `@prisma/adapter-pg` - PostgreSQL adapter for Prisma
+- `fastify` - Core web framework
 - `@fastify/cors` - CORS middleware
-- `@fastify/swagger` - Documentação automática
-- `@fastify/swagger-ui` - UI para Swagger
-- `@scalar/fastify-api-reference` - Referência alternativa de API
-- `fastify-type-provider-zod` - Integração Fastify + Zod
-- `better-auth` - Sistema de autenticação
-- `zod` - Validação de dados
-- `dotenv` - Variáveis de ambiente
-- `tsx` - Execução de TypeScript
+- `@fastify/swagger` - Automatic documentation generator
+- `@fastify/swagger-ui` - Swagger UI interface
+- `@scalar/fastify-api-reference` - Modern API reference alternative
+- `fastify-type-provider-zod` - Fastify + Zod integration
+- `better-auth` - Authentication system
+- `zod` - Data validation
+- `dotenv` - Environment variable management
+- `tsx` - TypeScript execution engine
 
-### Desenvolvimento
+### Development
 
-- `typescript` - Compilador TypeScript
-- `eslint` - Linting
-- `prettier` - Formatação de código
-- `typescript-eslint` - ESLint para TypeScript
+- `typescript` - TypeScript compiler
+- `eslint` - Linting tool
+- `prettier` - Code formatter
+- `typescript-eslint` - ESLint for TypeScript
 
-## ⚙️ Configuração e Instalação
+## ⚙️ Configuration & Installation
 
-### Pré-requisitos
+### Prerequisites
 
-- Node.js 24.x ou superior
-- npm ou yarn
-- PostgreSQL (ou use Docker Compose)
+- Node.js 24.x or higher
+- npm or yarn
+- PostgreSQL (or use Docker Compose)
 - Git
 
-### Instalação
+### Installation
 
-1. **Clone o repositório**
+1. **Clone the repository**
 
 ```bash
-git clone <seu-repositorio>
+git clone <your-repository-url>
 cd yamada-training
+
 ```
 
-2. **Instale as dependências**
+2. **Install dependencies**
 
 ```bash
 npm install
+
 ```
 
-3. **Configure as variáveis de ambiente**
+3. **Configure environment variables**
 
 ```bash
 cp .env.example .env
+
 ```
 
-Edite o arquivo `.env` com suas configurações:
+Edit the `.env` file with your specific settings:
 
 ```env
 DATABASE_URL=postgresql://user:password@localhost:5432/yamada_training
 NODE_ENV=development
-# Outras variáveis conforme necessário
+# Additional variables as required
+
 ```
 
-4. **Inicialize o banco de dados com Docker**
+4. **Initialize the database with Docker**
 
 ```bash
 docker-compose up -d
+
 ```
 
-5. **Execute as migrações do Prisma**
+5. **Run Prisma migrations**
 
 ```bash
 npx prisma migrate dev
+
 ```
 
-6. **Inicie o servidor em desenvolvimento**
+6. **Start the development server**
 
 ```bash
 npm run dev
+
 ```
 
-O servidor estará disponível em `http://localhost:3000`.
+The server will be available at `http://localhost:8081`.
 
-## 📁 Estrutura do Projeto
+## 📁 Project Structure
 
 ```
 yamada-training/
 ├── src/
-│   ├── index.ts              # Ponto de entrada da API
+│   ├── index.ts              # API Entry point
 │   ├── lib/
-│   │   └── auth.ts           # Configuração de autenticação
+│   │   └── auth.ts           # Auth configuration
 │   └── generated/
-│       └── prisma/           # Código gerado automaticamente
+│       └── prisma/           # Auto-generated code
 ├── prisma/
-│   └── schema.prisma         # Definição do modelo de dados
-├── docker-compose.yml        # Configuração Docker
-├── eslint.config.js          # Configuração ESLint
-├── tsconfig.json             # Configuração TypeScript
-├── package.json              # Dependências do projeto
-└── README.md                 # Este arquivo
+│   └── schema.prisma         # Data model definition
+├── docker-compose.yml        # Docker configuration
+├── eslint.config.js          # ESLint configuration
+├── tsconfig.json             # TypeScript configuration
+├── package.json              # Project dependencies
+└── README.md                 # Project documentation
+
 ```
 
-## 📊 Modelo de Dados
+## 📊 Data Model
 
-### Principais Entidades
+### Key Entities
 
-- **User** - Usuário do sistema com autenticação
-- **WorkoutPlan** - Plano de treino personalizado
-- **WorkoutDay** - Dia específico de treino dentro de um plano
-- **WorkoutExercise** - Exercício específico com séries/repetições
-- **Session** - Sessão de autenticação do usuário
-- **Account** - Contas vinculadas ao usuário
-- **Verification** - Tokens de verificação de email
+- **User** - System user with authentication credentials
+- **WorkoutPlan** - Personalized training plan
+- **WorkoutDay** - Specific training day within a plan
+- **WorkoutExercise** - Exercise details including sets and reps
+- **Session** - Active user authentication sessions
+- **Account** - Linked user accounts (OAuth/Credentials)
+- **Verification** - Email verification tokens
 
-## 🔧 Scripts Disponíveis
+## 🔧 Available Scripts
 
 ```bash
-# Desenvolvimento
-npm run dev                   # Inicia o servidor com hot-reload
+# Development
+npm run dev                   # Starts the server with hot-reload
 
 # Prisma
-npx prisma migrate dev        # Cria migrações
-npx prisma studio             # UI visual para o banco de dados
-npx prisma generate           # Regenera o cliente Prisma
+npx prisma migrate dev        # Creates and applies migrations
+npx prisma studio             # Visual UI for the database
+npx prisma generate           # Regenerates Prisma Client
 
-# Linting
-npx eslint src/               # Verifica linting
-npx eslint src/ --fix         # Corrige erros automáticos
-npx prettier --check src/     # Verifica formatação
-npx prettier --write src/     # Formata o código
+# Linting & Formatting
+npx eslint src/               # Checks for linting errors
+npx eslint src/ --fix         # Automatically fixes linting errors
+npx prettier --check src/     # Checks formatting
+npx prettier --write src/     # Formats the code
+
 ```
 
-## 📚 API Endpoints (Exemplos)
+## 📚 API Endpoints
 
-A API é documentada automaticamente via Swagger:
+The API is automatically documented via Swagger and Scalar:
 
-- UI Swagger: `http://localhost:3000/swagger/`
-- Scalar Reference: `http://localhost:3000/reference`
+- **Scalar Reference:** `http://localhost:8081/docs`
+- **Swagger JSON:** `http://localhost:8081/swagger.json`
 
-## 🔐 Autenticação
+## 🔐 Authentication
 
-O projeto utiliza **Better Auth** para gerenciar:
+Project powered by **Better Auth** handling:
 
-- Registro e login de usuários
-- Geração e validação de tokens
-- Gerenciamento de sessões
-- Verificação de email
-- Recuperação de senha
+- User registration and login
+- Token generation and validation
+- Session management
+- Email verification
+- Password recovery
 
 ## 🌐 CORS
 
-CORS está configurado via `@fastify/cors`. Ajuste as configurações conforme necessário em `src/index.ts`.
+CORS is configured via `@fastify/cors`. Adjust the permitted origins in `src/index.ts` to match your frontend environment.
 
 ## 🐳 Docker
 
-Para facilitar o desenvolvimento local:
+Streamline local development using:
 
 ```bash
-# Inicia os containers
+# Start containers
 docker-compose up -d
 
-# Acessa os logs
+# View logs
 docker-compose logs -f
 
-# Para os containers
+# Stop containers
 docker-compose down
+
 ```
 
-## 📝 Padrões de Código
+## 📝 Coding Standards
 
-- **TypeScript Strict Mode** - Tipagem rigorosa obrigatória
-- **ESLint + Prettier** - Estilos consistentes
-- **Validação com Zod** - Validação de entrada/saída
-- **Formatação automática** - Ao salvar no VS Code
+- **TypeScript Strict Mode** - Rigorous typing required
+- **ESLint + Prettier** - Consistent code style
+- **Zod Validation** - Strict input/output validation
+- **Format on Save** - Recommended VS Code configuration
 
-Configure seu editor:
+Editor Setup:
 
 ```json
 {
   "editor.formatOnSave": true,
   "editor.defaultFormatter": "esbenp.prettier-vscode",
-  "editor.codeActionsOnSave": { "source.fixAll.eslint": "always" }
+  "editor.codeActionsOnSave": {
+    "source.fixAll.eslint": "always"
+  }
 }
 ```
 
-## 🚧 Melhorias Futuras
+## 🚧 Roadmap / Future Improvements
 
-- [ ] Compra de planos premium
-- [ ] Sistema de recomendações de exercícios
-- [ ] Histórico e progresso do treino
-- [ ] Integração com sensores fitness
-- [ ] App mobile com React Native
-- [ ] Testes unitários e E2E
+- [ ] Premium plan purchases
+- [ ] Exercise recommendation system
+- [ ] Workout history and progress tracking
+- [ ] Fitness sensor integration
+- [ ] Mobile App (React Native)
+- [ ] Unit and E2E Testing
 
-## 📄 Documentação
+## 🤝 Contributing
 
-Para mais detalhes sobre a arquitetura e configuração, consulte [documentacao.md](documentacao.md).
+1. Create a feature branch (`git checkout -b feature/AmazingFeature`)
+2. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
+3. Push to the branch (`git push origin feature/AmazingFeature`)
+4. Open a Pull Request
 
-## 🤝 Contribuindo
+## 📜 License
 
-1. Crie uma branch para sua feature (`git checkout -b feature/AmazingFeature`)
-2. Commit suas mudanças (`git commit -m 'Add some AmazingFeature'`)
-3. Push para a branch (`git push origin feature/AmazingFeature`)
-4. Abra um Pull Request
+This project is licensed under the ISC License - see the `package.json` file for details.
 
-## 📜 Licença
-
-Este projeto está licenciado sob a Licença ISC - veja o arquivo `package.json` para detalhes.
-
-## 👤 Autor
+## 👤 Author
 
 **Yamada Training**
 
 - GitHub: [Yudi Yamada](https://github.com/YudiYamada)
-- LinkedIn: [Yudi Yamada] (https://www.linkedin.com/in/yudi-yamada-0a10181b9/)
-
-## 💬 Suporte
-
-Se você tiver dúvidas or problemas, abra uma [Issue](../../issues) no repositório.
+- LinkedIn: [Yudi Yamada](https://www.linkedin.com/in/yudi-yamada-0a10181b9/)
 
 ---
 
-**Desenvolvido com ❤️ usando Fastify + Prisma**
+**Developed with ❤️ using Fastify + Prisma**
