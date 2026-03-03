@@ -1,7 +1,3 @@
-Here is the professional English version of your README, optimized for GitHub and Notion.
-
----
-
 # 🏋️ Yamada Training
 
 A robust and modern API for workout plan and routine management, built with Fastify, Prisma, TypeScript, and Better Auth.
