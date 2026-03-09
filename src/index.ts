@@ -13,6 +13,10 @@ import {
 import z from "zod";
 
 import { auth } from "./lib/auth.js";
+// import { aiRoutes } from "./routes/ai.js";
+import { homeRoutes } from "./routes/home.js";
+import { meRoutes } from "./routes/me.js";
+import { statsRoutes } from "./routes/stats.js";
 import { workoutPlanRoutes } from "./routes/workout-plan.js";
 
 const app = Fastify({
@@ -62,8 +66,13 @@ await app.register(fastifyApiReference, {
   },
 });
 
+// RESTFULL
 // ROUTES
+await app.register(homeRoutes, { prefix: "/home" });
+await app.register(meRoutes, { prefix: "/me" });
+await app.register(statsRoutes, { prefix: "/stats" });
 await app.register(workoutPlanRoutes, { prefix: "/workout-plans" });
+// await app.register(aiRoutes, { prefix: "/ai" });
 
 app.withTypeProvider<ZodTypeProvider>().route({
   method: "GET",
@@ -80,7 +89,7 @@ app.withTypeProvider<ZodTypeProvider>().route({
   method: "GET",
   url: "/",
   schema: {
-    description: "Hello World",
+    description: "Hello world",
     tags: ["Hello World"],
     response: {
       200: z.object({
@@ -89,30 +98,37 @@ app.withTypeProvider<ZodTypeProvider>().route({
     },
   },
   handler: () => {
-    return { message: "Hello World" };
+    return {
+      message: "Hello World",
+    };
   },
 });
 
 app.route({
   method: ["GET", "POST"],
   url: "/api/auth/*",
+  schema: {
+    hide: true,
+  },
   async handler(request, reply) {
     try {
+      // Construct request URL
       const url = new URL(request.url, `http://${request.headers.host}`);
 
+      // Convert Fastify headers to standard Headers object
       const headers = new Headers();
       Object.entries(request.headers).forEach(([key, value]) => {
         if (value) headers.append(key, value.toString());
       });
-
+      // Create Fetch API-compatible request
       const req = new Request(url.toString(), {
         method: request.method,
         headers,
         ...(request.body ? { body: JSON.stringify(request.body) } : {}),
       });
-
+      // Process authentication request
       const response = await auth.handler(req);
-
+      // Forward response to client
       reply.status(response.status);
       response.headers.forEach((value, key) => reply.header(key, value));
       reply.send(response.body ? await response.text() : null);
@@ -126,9 +142,9 @@ app.route({
   },
 });
 
-app.listen({ port: Number(process.env.PORT) || 8081 }, function (err) {
-  if (err) {
-    app.log.error(err);
-    process.exit(1);
-  }
-});
+try {
+  await app.listen({ port: Number(process.env.PORT) || 8081 });
+} catch (err) {
+  app.log.error(err);
+  process.exit(1);
+}
