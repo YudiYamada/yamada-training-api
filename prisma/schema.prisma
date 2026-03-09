@@ -8,23 +8,27 @@ datasource db {
 }
 
 model User {
-  id            String        @id
-  workoutPlans  WorkoutPlan[]
-  name          String
-  email         String
-  emailVerified Boolean       @default(false)
-  image         String?
-  createdAt     DateTime      @default(now()) @db.Timestamptz()
-  updatedAt     DateTime      @updatedAt @db.Timestamptz()
-  sessions      Session[]
-  accounts      Account[]
+  id                  String        @id
+  workoutPlans        WorkoutPlan[]
+  name                String
+  email               String
+  emailVerified       Boolean       @default(false)
+  image               String?
+  createdAt           DateTime      @default(now())
+  updatedAt           DateTime      @updatedAt
+  sessions            Session[]
+  accounts            Account[]
+  weightInGrams       Int?
+  heightInCentimeters Int?
+  age                 Int?
+  bodyFatPercentage   Int? // 100 representa 100% 
 
   @@unique([email])
   @@map("user")
 }
-
-// Representa o usuário do aplicativo. 
+// Representa o usuário do aplicativo.
 // Cada usuário pode ter vários planos de treino (WorkoutPlan), sessões de login (Session) e contas vinculadas (Account).
+// Também guarda informações físicas (peso, altura, idade, percentual de gordura).
 // É a entidade principal que conecta todas as outras tabelas relacionadas ao treino e autenticação.
 
 model WorkoutPlan {
@@ -37,10 +41,10 @@ model WorkoutPlan {
   createdAt   DateTime     @default(now()) @db.Timestamptz()
   updatedAt   DateTime     @updatedAt @db.Timestamptz()
 }
-
 // Representa um plano de treino criado por um usuário.
 // Está relacionado diretamente ao User (um usuário pode ter vários planos).
 // Cada plano contém vários dias de treino (WorkoutDay).
+// Possui flag de ativação (isActive) e timestamps para controle.
 
 enum WeekDay {
   MONDAY
@@ -51,7 +55,6 @@ enum WeekDay {
   SATURDAY
   SUNDAY
 }
-
 // Enum que define os dias da semana.
 // Usado para organizar os treinos dentro de um plano (WorkoutDay).
 
@@ -64,14 +67,15 @@ model WorkoutDay {
   weekDay                    WeekDay
   exercises                  WorkoutExercise[]
   estimatedDurationInSeconds Int
+  coverImageUrl              String?
   createdAt                  DateTime          @default(now()) @db.Timestamptz()
   updatedAt                  DateTime          @updatedAt @db.Timestamptz()
   sessions                   WorkoutSession[]
 }
-
 // Representa um dia específico dentro de um plano de treino.
 // Está vinculado a um WorkoutPlan e pode conter vários exercícios (WorkoutExercise).
 // Pode ser marcado como dia de descanso (isRest).
+// Possui duração estimada, imagem de capa opcional e histórico de sessões realizadas (WorkoutSession).
 
 model WorkoutExercise {
   id                String     @id @default(uuid())
@@ -85,9 +89,8 @@ model WorkoutExercise {
   createdAt         DateTime   @default(now()) @db.Timestamptz()
   updatedAt         DateTime   @updatedAt @db.Timestamptz()
 }
-
 // Representa um exercício dentro de um dia de treino (WorkoutDay).
-// Contém informações como número de séries (sets), repetições (reps) e tempo de descanso.
+// Contém informações como ordem, número de séries (sets), repetições (reps) e tempo de descanso.
 // Está diretamente relacionado a WorkoutDay.
 
 model WorkoutSession {
@@ -99,6 +102,9 @@ model WorkoutSession {
   createdAt    DateTime   @default(now()) @db.Timestamptz()
   updatedAt    DateTime   @updatedAt @db.Timestamptz()
 }
+// Representa uma execução prática de um dia de treino (WorkoutDay).
+// Guarda informações de início (startedAt) e conclusão (completedAt).
+// Útil para histórico de treinos realizados.
 
 model Session {
   id        String   @id
@@ -115,7 +121,6 @@ model Session {
   @@index([userId])
   @@map("session")
 }
-
 // Representa uma sessão de login/autenticação do usuário.
 // Está vinculada ao User e guarda informações como token, IP e userAgent.
 // Usada para controle de acesso e segurança.
@@ -139,9 +144,9 @@ model Account {
   @@index([userId])
   @@map("account")
 }
-
 // Representa uma conta vinculada ao usuário (ex: login via Google, Facebook ou conta própria).
-// Está relacionada ao User e guarda tokens de autenticação e informações de acesso.
+// Está relacionada ao User e guarda tokens de autenticação, escopo e credenciais.
+// Permite múltiplos provedores de login.
 
 model Verification {
   id         String   @id
@@ -154,6 +159,5 @@ model Verification {
   @@index([identifier])
   @@map("verification")
 }
-
 // Representa códigos de verificação (ex: email, senha temporária, recuperação de conta).
 // Não está diretamente ligado ao User, mas serve para processos de autenticação e segurança.
