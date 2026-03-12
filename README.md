@@ -1,243 +1,245 @@
 # 🏋️ Yamada Training
 
-A robust and modern API for workout plan and routine management, built with Fastify, Prisma, TypeScript, and Better Auth.
+A modern API for managing workouts, personal metrics, statistics and an AI-powered trainer.
 
 ## 📋 Description
 
-**Yamada Training** is a professional REST API designed to manage:
+**Yamada Training** is a full-featured REST API built with Fastify and TypeScript. It allows users to:
 
-- Users and secure authentication (Better Auth)
-- Personalized workout plans
-- Exercise routines organized by day of the week
-- Exercise sets with specific reps and weight tracking
-- Email verification system
-- Session management and linked accounts
+- Authenticate securely using **Better Auth** (email verification, sessions, linked accounts)
+- Create and manage personalized workout plans (7‑day week structure, rest days, cover images)
+- Start and update workout sessions with built‑in validation
+- Store personal training metrics (weight, height, age, body fat)
+- Retrieve home‑screen data (today's workout, streaks, consistency)
+- Query detailed statistics (streak, completed workouts, time spent)
+- Interact with an **AI personal trainer** that can generate plans automatically
 
 ## 🚀 Tech Stack
 
-- **[Fastify](https://www.fastify.io/)** - High-performance HTTP framework
-- **[Prisma](https://www.prisma.io/)** - Modern ORM for Node.js and TypeScript
-- **[TypeScript](https://www.typescriptlang.org/)** - Static and type-safe development
-- **[Better Auth](https://www.better-auth.com/)** - Complete authentication and authorization
-- **[Zod](https://zod.dev/)** - TypeScript-first schema validation
-- **[PostgreSQL](https://www.postgresql.org/)** - Relational database
-- **[Docker Compose](https://docs.docker.com/compose/)** - Containerization
+- **Fastify** – high‑performance HTTP framework
+- **TypeScript** – statically‑typed development
+- **Prisma** – ORM with PostgreSQL
+- **Better Auth** – authentication & authorization
+- **Zod** – schema validation
+- **OpenAI & `ai` SDK** – AI assistant integration
+- **Day.js** – date manipulation
+- **Docker Compose** – development containers
 
 ## 📦 Dependencies
 
 ### Runtime
 
-- `@prisma/client` - Prisma Client
-- `@prisma/adapter-pg` - PostgreSQL adapter for Prisma
-- `fastify` - Core web framework
-- `@fastify/cors` - CORS middleware
-- `@fastify/swagger` - Automatic documentation generator
-- `@fastify/swagger-ui` - Swagger UI interface
-- `@scalar/fastify-api-reference` - Modern API reference alternative
-- `fastify-type-provider-zod` - Fastify + Zod integration
-- `better-auth` - Authentication system
-- `zod` - Data validation
-- `dotenv` - Environment variable management
-- `tsx` - TypeScript execution engine
+- `@prisma/client`, `@prisma/adapter-pg`
+- `fastify`, `@fastify/cors`, `@fastify/swagger`, `@fastify/swagger-ui`
+- `@scalar/fastify-api-reference`
+- `fastify-type-provider-zod`
+- `better-auth`, `dayjs`, `zod`, `dotenv`, `tsx`
+- `ai`, `@ai-sdk/openai`
 
 ### Development
 
-- `typescript` - TypeScript compiler
-- `eslint` - Linting tool
-- `prettier` - Code formatter
-- `typescript-eslint` - ESLint for TypeScript
+- `typescript`, `eslint`, `prettier`, `typescript-eslint`, `prisma`
 
 ## ⚙️ Configuration & Installation
 
 ### Prerequisites
 
-- Node.js 24.x or higher
+- Node.js 24.x+
 - npm or yarn
-- PostgreSQL (or use Docker Compose)
+- PostgreSQL (Docker or local)
 - Git
 
-### Installation
+### Setup steps
 
-1. **Clone the repository**
+1. **Clone the repo**
 
-```bash
-git clone https://github.com/YudiYamada/yamada-training-api
-cd yamada-training
-
-```
+   ```bash
+   git clone https://github.com/YudiYamada/yamada-training-api.git
+   cd yamada-training
+   ```
 
 2. **Install dependencies**
 
-```bash
-npm install
+   ```bash
+   npm install
+   ```
 
-```
+3. **Configure environment**
 
-3. **Configure environment variables**
+   ```bash
+   cp .env.example .env
+   ```
 
-```bash
-cp .env.example .env
+   Update the file with at least:
 
-```
+   ```env
+   DATABASE_URL=postgresql://user:password@localhost:5432/yamada_training
+   NODE_ENV=development
+   PORT=8081
+   OPENAI_API_KEY=sk-...          # required for /ai endpoint
+   CORS_ORIGIN=http://localhost:3000  # optional
+   ```
 
-Edit the `.env` file with your specific settings:
+4. **Start services**
 
-```env
-DATABASE_URL=postgresql://user:password@localhost:5432/yamada_training
-NODE_ENV=development
-# Additional variables as required
+   ```bash
+   docker-compose up -d
+   ```
 
-```
+5. **Run migrations**
 
-4. **Initialize the database with Docker**
+   ```bash
+   npx prisma migrate dev
+   ```
 
-```bash
-docker-compose up -d
+6. **Launch server**
 
-```
+   ```bash
+   npm run dev
+   ```
 
-5. **Run Prisma migrations**
+The API will be available at `http://localhost:8081`.
 
-```bash
-npx prisma migrate dev
-
-```
-
-6. **Start the development server**
-
-```bash
-npm run dev
-
-```
-
-The server will be available at `http://localhost:8081`.
+---
 
 ## 📁 Project Structure
 
 ```
 yamada-training/
 ├── src/
-│   ├── index.ts              # API Entry point
-│   ├── lib/
-│   │   └── auth.ts           # Auth configuration
-│   └── generated/
-│       └── prisma/           # Auto-generated code
+│   ├── index.ts               # server entrypoint & route registration
+│   ├── lib/                   # shared helpers (auth, db)
+│   ├── errors/                # custom error classes
+│   ├── schemas/               # Zod validation schemas
+│   ├── routes/                # Fastify routes (home, stats, ai, etc.)
+│   └── usecases/              # business logic implementations
+│   └── generated/prisma/      # Prisma client code
 ├── prisma/
-│   └── schema.prisma         # Data model definition
-├── docker-compose.yml        # Docker configuration
-├── eslint.config.js          # ESLint configuration
-├── tsconfig.json             # TypeScript configuration
-├── package.json              # Project dependencies
-└── README.md                 # Project documentation
-
+│   └── schema.prisma          # database models
+├── workout-plan.json          # example payload
+├── docker-compose.yml
+├── eslint.config.js
+├── tsconfig.json
+├── package.json
+└── README.md
 ```
+
+---
+
+## 💡 Highlights
+
+- Authentication with Better Auth (email verification, sessions, OAuth)
+- Comprehensive workout plan management
+- Session start/update workflows with validation errors
+- Personal statistics (streaks, consistency, time, completion rate)
+- Home dashboard endpoint for frontend convenience
+- Personal metrics CRUD (`/me` endpoints)
+- AI trainer via `/ai` using OpenAI models and custom tools
+- Automatic Swagger & Scalar API docs
+
+---
 
 ## 📊 Data Model
 
-### Key Entities
+Entities defined in `prisma/schema.prisma` include:
 
-- **User** - System user with authentication credentials
-- **WorkoutPlan** - Personalized training plan
-- **WorkoutDay** - Specific training day within a plan
-- **WorkoutExercise** - Exercise details including sets and reps
-- **Session** - Active user authentication sessions
-- **Account** - Linked user accounts (OAuth/Credentials)
-- **Verification** - Email verification tokens
+| Model             | Description                                      |
+|------------------|--------------------------------------------------|
+| User             | application user with auth info and metrics      |
+| WorkoutPlan      | named plan containing multiple WorkoutDays       |
+| WorkoutDay       | single day (weekday, rests, exercises, sessions) |
+| WorkoutExercise  | exercise details (sets, reps, order, rest time)  |
+| WorkoutSession   | record of a performed day (start/completion)
+| Session/Account/Verification | auth infrastructure models         |
 
-## 🔧 Available Scripts
+---
+
+## 🧾 Available Scripts
 
 ```bash
-# Development
-npm run dev                   # Starts the server with hot-reload
+# start in dev mode
+npm run dev
 
-# Prisma
-npx prisma migrate dev        # Creates and applies migrations
-npx prisma studio             # Visual UI for the database
-npx prisma generate           # Regenerates Prisma Client
+# prisma tools
+toy prisma migrate dev
+npx prisma studio
+npx prisma generate
 
-# Linting & Formatting
-npx eslint src/               # Checks for linting errors
-npx eslint src/ --fix         # Automatically fixes linting errors
-npx prettier --check src/     # Checks formatting
-npx prettier --write src/     # Formats the code
-
+# lint & format
+npx eslint src/ --fix
+npx prettier --write src/
 ```
 
-## 📚 API Endpoints
+---
 
-The API is automatically documented via Swagger and Scalar:
+## 🗂 API Endpoints
 
-- **Scalar Reference:** `http://localhost:8081/docs`
-- **Swagger JSON:** `http://localhost:8081/swagger.json`
+Authentication required for all routes except the root health check.
+
+| Method | Endpoint                                                                 | Description                                 |
+|--------|-------------------------------------------------------------------------|---------------------------------------------|
+| GET    | `/`                                                                     | health check                                |
+| **Auth proxy** | `/api/auth/*`                                                  | Better Auth endpoints (hidden)              |
+| GET    | `/home/:date`                                                           | home screen data for ISO date               |
+| GET    | `/me`                                                                    | fetch user training metrics                 |
+| PUT    | `/me`                                                                    | upsert training metrics                     |
+| GET    | `/stats?from=&to=`                                                       | workout statistics over a date range        |
+| GET    | `/workout-plans`                                                         | list workout plans (filter `active=true`)   |
+| POST   | `/workout-plans`                                                         | create plan                                 |
+| GET    | `/workout-plans/:workoutPlanId`                                         | retrieve plan                               |
+| GET    | `/workout-plans/:workoutPlanId/days/:workoutDayId`                     | retrieve specific day                       |
+| POST   | `/workout-plans/:planId/days/:dayId/sessions`                           | start plan session                          |
+| PATCH  | `/workout-plans/:planId/days/:dayId/sessions/:sessionId`                | complete/update session                     |
+| POST   | `/ai`                                                                    | chat with AI personal trainer               |
+
+> **Note:** `/ai` requires `OPENAI_API_KEY` to be set. See `src/routes/ai.ts` for the system prompt and tools.
+
+API docs live at:
+
+- Swagger JSON: `http://localhost:8081/swagger.json`
+- Scalar UI: `http://localhost:8081/docs`
+
+---
 
 ## 🔐 Authentication
 
-Project powered by **Better Auth** handling:
+Powered by **Better Auth**. Look for `/api/auth` routes. The Fastify server handles these under the hood in `src/index.ts`.
 
-- User registration and login
-- Token generation and validation
-- Session management
-- Email verification
-- Password recovery
+---
 
-## 🌐 CORS
+## 🤖 AI Personal Trainer
 
-CORS is configured via `@fastify/cors`. Adjust the permitted origins in `src/index.ts` to match your frontend environment.
+The `/ai` route opens a streaming conversation with a GPT‑4o‑mini model.
+Tools let the model access user metrics, save metrics, list plans and create new plans automatically.
+Make sure `OPENAI_API_KEY` is defined before running.
 
-## 🐳 Docker
+---
 
-Streamline local development using:
-
-```bash
-# Start containers
-docker-compose up -d
-
-# View logs
-docker-compose logs -f
-
-# Stop containers
-docker-compose down
+## 🐳 Docker Workflows
 
 ```
-
-## 📝 Coding Standards
-
-- **TypeScript Strict Mode** - Rigorous typing required
-- **ESLint + Prettier** - Consistent code style
-- **Zod Validation** - Strict input/output validation
-- **Format on Save** - Recommended VS Code configuration
-
-Editor Setup:
-
-```json
-{
-  "editor.formatOnSave": true,
-  "editor.defaultFormatter": "esbenp.prettier-vscode",
-  "editor.codeActionsOnSave": {
-    "source.fixAll.eslint": "always"
-  }
-}
+docker-compose up -d      # start Postgres (and others if added)
+docker-compose logs -f     # stream logs
+docker-compose down        # stop and remove containers
 ```
 
-## 🚧 Roadmap / Future Improvements
+---
 
-- [ ] Premium plan purchases
-- [ ] Exercise recommendation system
-- [ ] Workout history and progress tracking
-- [ ] Fitness sensor integration
-- [ ] Mobile App (React Native)
-- [ ] Unit and E2E Testing
+## 📁 Example Payloads
 
-## 🤝 Contributing
+- `workout-plan.json` contains a sample plan structure used in tests or manual API calls.
+- Schemas for request/response live in `src/schemas/index.ts`.
 
-1. Create a feature branch (`git checkout -b feature/AmazingFeature`)
-2. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
-3. Push to the branch (`git push origin feature/AmazingFeature`)
-4. Open a Pull Request
+---
 
-## 📜 License
+## ✅ Tips
 
-This project is licensed under the ISC License - see the `package.json` file for details.
+- Edit CORS origins in `src/index.ts` if your frontend uses a different host.
+- Run `npx prisma studio` to browse and modify the database directly.
+- Documentation updates automatically when the server starts.
+
+
+Enjoy building with Yamada Training! 💪
 
 ## 👤 Author
 
@@ -245,7 +247,3 @@ This project is licensed under the ISC License - see the `package.json` file for
 
 - GitHub: [Yudi Yamada](https://github.com/YudiYamada)
 - LinkedIn: [Yudi Yamada](https://www.linkedin.com/in/yudi-yamada-0a10181b9/)
-
----
-
-**Developed with ❤️ using Fastify + Prisma**

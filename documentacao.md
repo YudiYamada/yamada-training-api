@@ -1,331 +1,285 @@
 # Master Guide: Fastify API + Prisma + Better Auth
 
-This is a comprehensive step-by-step documentation for creating this professional API.
+This document explains, step by step, how the **Yamada Training** backend is built and how to get it running today. It is written in phases that mirror the order in which the codebase was originally created.
 
 ---
 
-## Phase 1: Initialization and Code Standardization
+## Phase 1 – Project Foundation & Tooling
 
-*The goal here is to ensure clean code and guarantee that all developers follow the same standards from the very first minute.*
+*Establish the language, style and basic workflows used across the repository.*
 
-**1. Initialize the project and base dependencies**
+1. **Initialize repository**
 
-```bash
-npm init -y 
+   ```bash
+   mkdir yamada-training && cd yamada-training
+   git init
+   npm init -y
+   ```
 
-```
+2. **TypeScript**
 
-and also:
+   ```bash
+   npm install typescript @types/node -D
+   npx tsc --init
+   ```
 
-```bash
-npm add typescript @types/node -D
+   Update `tsconfig.json`:
 
-```
+   ```json
+   {
+     "compilerOptions": {
+       "target": "ES2022",
+       "module": "NodeNext",
+       "moduleResolution": "NodeNext",
+       "rootDir": "src",
+       "outDir": "dist",
+       "esModuleInterop": true,
+       "strict": true,
+       "skipLibCheck": true
+     }
+   }
+   ```
 
-> Node doesn't understand TypeScript natively. We need the compiler (`typescript`) and type definitions (`@types/node`) to enable autocomplete and avoid basic typing errors.
+3. **Lock Node version & helper script**
 
-**2. TypeScript Configuration (`tsconfig.json`)**
+   Add to `package.json`:
 
-Run:
+   ```json
+   "engines": { "node": "24.x" },
+   "scripts": {
+     "dev": "tsx --watch src/index.ts"
+   }
+   ```
 
-```bash
-npx tsc --init 
+   And create `.npmrc` with `engine-strict=true`.
 
-```
+4. **Linting & formatting**
 
-And configure the file as follows:
+   ```bash
+   npm install eslint prettier eslint-config-prettier eslint-plugin-simple-import-sort -D
+   ```
 
-```json
-{
-  "compilerOptions": {
-    "target": "ES2022",
-    "module": "NodeNext",
-    "moduleResolution": "NodeNext", // Essential for running ESM in Node 24
-    "rootDir": "src",
-    "outDir": "dist",
-    "esModuleInterop": true,
-    "strict": true,
-    "skipLibCheck": true
-  }
-}
+   Recommended VS Code settings (`.vscode/settings.json`):
 
-```
+   ```json
+   {
+     "editor.formatOnSave": true,
+     "editor.defaultFormatter": "esbenp.prettier-vscode",
+     "editor.codeActionsOnSave": { "source.fixAll.eslint": "always" }
+   }
+   ```
 
-> Using `NodeNext` ensures the project supports ECMAScript Modules (ESM) natively. Without this, you would face constant "module not found" issues when using modern libraries.
+5. **Additional dev utilities**
 
-**3. Locking the Node Version (Consistency)**
-
-Add the following to `package.json` and create a `.npmrc` file:
-
-```json
-// package.json
-"engines": { "node": "24.x" },
-"scripts": { "dev": "tsx --watch src/index.ts" }
-
-```
-
-```text
-// .npmrc
-engine-strict=true
-
-```
-
-> This avoids the "it works on my machine" syndrome. If another dev tries to run the project with an outdated Node version, NPM will block the execution. The `tsx` tool in the `dev` script allows running `.ts` files with hot-reload without manual builds.
-
-**4. Setting up Linting and Formatting (ESLint + Prettier)**
-
-```bash
-npm add prettier eslint eslint-config-prettier eslint-plugin-simple-import-sort -D
-
-```
-
-> ESLint catches logical errors, while Prettier handles aesthetics (semicolons, quotes). The `import-sort` plugin automatically keeps imports organized, preventing merge conflicts in Git.
-
-**5. Editor Integration and Automation**
-
-Create the `.vscode/settings.json` file:
-
-```json
-{
-  "editor.formatOnSave": true,
-  "editor.defaultFormatter": "esbenp.prettier-vscode",
-  "editor.codeActionsOnSave": { "source.fixAll.eslint": "always" }
-}
-
-```
-
-> Automation is key. If you have to format code manually, you will eventually forget. Let the editor do it for you every time the file is saved.
+   - `prisma` CLI (used for migrations)
+   - `@types/*` packages whenever necessary
 
 ---
 
-## Phase 2: API Core and Validation
+## Phase 2 – Server & Validation
 
-*Here we spin up the server and ensure that incoming data is reliable.*
+*Bring up Fastify and ensure typed request/response handling.*
 
-**6. Install Fastify and Environment Variables**
+1. **Install runtime dependencies**
 
-```bash
-npm i fastify dotenv 
+   ```bash
+   npm install fastify dotenv zod fastify-type-provider-zod
+   ```
 
-```
+2. **Create entrypoint `src/index.ts`**
 
-And create a `.env` file with:
+   ```ts
+   import "dotenv/config";
+   import Fastify from "fastify";
+   import { serializerCompiler, validatorCompiler, ZodTypeProvider } from "fastify-type-provider-zod";
 
-```text
-PORT=8081
+   const app = Fastify({ logger: true });
+   app.setValidatorCompiler(validatorCompiler);
+   app.setSerializerCompiler(serializerCompiler);
 
-```
+   // later: register routes, cors, swagger, etc.
 
-> Fastify is one of the fastest frameworks on the market. We use `dotenv` to manage secrets (like database passwords) outside the source code for security reasons.
+   await app.listen({ port: Number(process.env.PORT) || 8081 });
+   ```
 
-**7. Server Boilerplate Setup (`src/index.ts`)**
+3. **Swagger & Scalar**
 
-```typescript
-import "dotenv/config";
-import Fastify from "fastify";
+   ```bash
+   npm install @fastify/swagger @scalar/fastify-api-reference
+   ```
 
-const app = Fastify({ logger: true });
+   Register them in `src/index.ts` to expose `/swagger.json` and `/docs`.
 
-app.listen({ port: Number(process.env.PORT) || 8081 }, (err) => {
-  if (err) { app.log.error(err); process.exit(1); }
-});
-
-```
-
-> Environment variables are always strings. Always convert to `Number` and define a fallback (`|| 8081`) to ensure the server starts even in environments without a port configuration.
-
-**8. Adding Typing and Validation with Zod**
-
-```bash
-npm add zod fastify-type-provider-zod
-
-```
-
-```typescript
-import { serializerCompiler, validatorCompiler, ZodTypeProvider } from "fastify-type-provider-zod";
-
-const app = Fastify({ logger: true }).withTypeProvider<ZodTypeProvider>();
-app.setValidatorCompiler(validatorCompiler);
-app.setSerializerCompiler(serializerCompiler);
-
-```
-
-> Zod validates data at runtime (preventing "garbage" data from reaching the database). The `type-provider` integrates this into TypeScript, providing full autocomplete in routes without requiring manual interfaces.
+   These tools read the Zod schemas you attach to each route and generate interactive documentation automatically.
 
 ---
 
-## Phase 3: Automatic Documentation
+## Phase 3 – Authentication & CORS
 
-*An API without documentation is an API that nobody knows how to use.*
+1. **Better Auth configuration**
 
-**9. Configure Swagger**
+   ```bash
+   npm install better-auth @prisma/adapter-pg
+   ```
 
-```bash
-npm add @fastify/swagger
+   In `src/lib/auth.ts`:
 
-```
+   ```ts
+   import betterAuth from "better-auth";
+   import { prisma } from "./db.js";
+   import { prismaAdapter } from "@prisma/adapter-pg";
 
-> Swagger reads your Zod routes and schemas to automatically generate a technical JSON file that describes everything your API does.
+   export const auth = betterAuth({
+     database: prismaAdapter(prisma, { provider: "postgresql" }),
+     emailAndPassword: { enabled: true },
+     plugins: [openAPI()],
+   });
+   ```
 
-**10. Configure Scalar (Doc Interface)**
+2. **CORS**
 
-```bash
-npm add @scalar/fastify-api-reference
+   ```bash
+   npm install @fastify/cors
+   ```
 
-```
+   Configure origins in `src/index.ts` (default `http://localhost:3000`).
 
-```typescript
-await app.register(fastifyApiReference, {
-  routePrefix: "/docs",
-  configuration: {
-    sources: [{ title: "API Doc", url: "/swagger.json" }]
-  }
-});
+3. **Proxy auth routes**
 
-```
-
-> Scalar is a modern and much more aesthetic interface than the default Swagger UI. It allows you to test routes and view request examples intuitively.
-
----
-
-## Phase 4: Data Layer (Persistence)
-
-*Configuring how the API communicates with the database.*
-
-**11. Infrastructure with Docker (`docker-compose.yml`)**
-
-```yaml
-services:
-  postgres:
-    image: postgres:16-alpine
-    container_name: yamada-api-db
-    environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: password
-      POSTGRES_DB: yamada-db
-    ports: ["5432:5432"]
-
-```
-
-> Using Docker prevents you from needing to install the database directly on your OS, facilitating project setup on any machine with a single command.
-
-**12. Initialize Prisma ORM**
-
-```bash
-npm add prisma -D 
-
-```
-
-and also:
-
-```bash
-npm add @prisma/client @prisma/adapter-pg
-
-```
-
-Run:
-
-```bash
-npx prisma init
-
-```
-
-> Prisma is an ORM that generates TypeScript types based on your database. The `adapter-pg` ensures top performance with native PostgreSQL drivers.
-
-**13. Database Sync**
-
-Run:
-
-```bash
-npx prisma db push
-
-```
-
-> In early development, `db push` is much faster than creating Migrations for every small field change, allowing for rapid schema iteration.
-
-**14. Generate Prisma Client**
-
-Run:
-
-```bash
-npx prisma generate
-
-```
-
-> This updates the Prisma "brain." Whenever you change the database schema, run this command so TypeScript recognizes the new tables and columns.
+   Add a wildcard route that forwards requests to `auth.handler` (see `src/index.ts`).
 
 ---
 
-## Phase 5: Authentication and Security
+## Phase 4 – Database with Prisma
 
-*Protecting the API and allowing user login.*
+1. **Docker & Postgres**
 
-**15. Configure Better-Auth (`src/lib/auth.ts`)**
+   Use `docker-compose.yml` with a Postgres service (`postgres:16-alpine`) and environment variables.
 
-```typescript
-export const auth = betterAuth({
-  database: prismaAdapter(prisma, { provider: "postgresql" }),
-  emailAndPassword: { enabled: true },
-  plugins: [openAPI()] // Automatically documents auth routes
-});
+2. **Prisma initialization**
 
-```
+   ```bash
+   npm install prisma -D
+   npx prisma init --datasource-provider postgresql
+   ```
 
-> Delegating authentication to a specialized library prevents critical security flaws. The `openAPI` plugin integrates login routes directly into your Scalar/Swagger UI.
+   Edit `prisma/schema.prisma` with the models shown in the repository (User, WorkoutPlan, etc.).
 
-**16. Enable CORS**
+3. **Migrations & client**
 
-```bash
-npm i @fastify/cors
+   ```bash
+   npx prisma migrate dev --name init
+   npx prisma generate
+   ```
 
-```
+   From this point, run `prisma migrate dev` whenever you change the schema.
 
-```typescript
-await app.register(fastifyCors, {
-  origin: ["http://localhost:3000"],
-  credentials: true,
-});
-
-```
-
-> Browsers block requests from different domains by default. CORS allows your Frontend (e.g., React) to communicate with your Backend.
-
-**17. Create Auth Proxy Route**
-
-```typescript
-app.route({
-  method: ["GET", "POST"],
-  url: "/api/auth/*",
-  async handler(request, reply) {
-    const response = await auth.handler(request.raw);
-    return reply.send(response);
-  },
-});
-
-```
-
-> This route centralizes all login/signup calls, forwarding them to the Better-Auth engine without cluttering your main route files.
+   Use `npx prisma studio` to inspect data.
 
 ---
 
-## Phase 6: Finalization and Fine-Tuning
+## Phase 5 – Business Logic & Routes
 
-**18. Generate Auth Schemas in Docs**
+1. **Schemas**
 
-Reference the Better-Auth schema in your Scalar registration.
+   Create Zod schemas in `src/schemas/index.ts` for every request/response shape. They are reused by routes and docs.
 
-> This ensures that anyone reading the documentation knows exactly how to log in without you needing to write extra manuals.
+2. **Usecases**
 
-**19. Create `.gitignore**`
+   Implement the application logic in `src/usecases/*` classes (e.g. `CreateWorkoutPlan`, `GetStats`). They interact with `src/lib/db.ts`.
 
-Add `node_modules`, `.env`, and `/dist`.
+3. **Routes**
 
-> Basic security. You should never send heavy dependencies or secret keys to version control (GitHub).
+   Define Fastify route files under `src/routes/`:
+   - `home.ts` – `/home/:date`
+   - `me.ts` – `/me` endpoints
+   - `stats.ts` – `/stats` with query parameters
+   - `workout-plan.ts` – CRUD for plans, days and sessions
+   - `ai.ts` – chat with AI trainer (see next phase)
 
-**20. Test the full flow**
+   Each route validates input with Zod, checks authentication via Better Auth, calls a usecase, and handles errors.
 
-Start the server and access `/docs`.
+4. **Error classes**
 
-> The final test validates that the database is up via Docker, Prisma has connected, and the documentation is live. If "Hello World" appears in Scalar, you are ready to start coding real routes.
+   Shared errors (e.g. `NotFoundError`) live in `src/errors/index.ts` and are translated to HTTP status codes in route handlers.
 
 ---
+
+## Phase 6 – AI Personal Trainer
+
+1. **Install AI libraries**
+
+   ```bash
+   npm install ai @ai-sdk/openai
+   ```
+
+2. **Environment**
+
+   Add `OPENAI_API_KEY` to `.env`.
+
+3. **System prompt & tools**
+
+   The `/ai` route (see `src/routes/ai.ts`) defines a long system prompt describing personality and rules. It also exposes four tools:
+   - `getUserTrainData`
+   - `updateUserTrainData`
+   - `getWorkoutPlans`
+   - `createWorkoutPlan`
+
+   Tools call the corresponding usecase classes.
+
+4. **Streaming response**
+
+   The endpoint uses `streamText` from the `ai` SDK to send a chunked response.
+
+---
+
+## Phase 7 – Running the Application
+
+1. **Start Postgres**
+
+   ```bash
+   docker-compose up -d
+   ```
+
+2. **Apply migrations**
+
+   ```bash
+   npx prisma migrate dev
+   ```
+
+3. **Run the server**
+
+   ```bash
+   npm run dev
+   ```
+
+4. **Access docs**
+
+   - Swagger JSON: `http://localhost:8081/swagger.json`
+   - Scalar UI: `http://localhost:8081/docs`
+
+5. **Health check**
+
+   Visit `http://localhost:8081/` to see the simple “Hello World” response.
+
+---
+
+## Miscellaneous Notes
+
+- **CORS origin** can be overridden with `CORS_ORIGIN` env var.
+- **Data seeding** may be done manually via `npx prisma studio` or by writing a script using Prisma Client.
+- **Testing** is not included yet; consider adding Jest or Vitest for unit/e2e tests.
+- **Roadmap**: premium plans, progress tracking, sensor integration, mobile app.
+
+---
+
+## Contributing
+
+1. Create a branch off `main`.
+2. Write code, adhere to ESLint/Prettier standards.
+3. Ensure types compile and routes pass validation.
+4. Commit and open a pull request.
+
+---
+
+**This guide tracks the current state of the repository (March 2026).**
