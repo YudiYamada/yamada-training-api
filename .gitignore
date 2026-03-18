@@ -5,3 +5,6 @@ node_modules
 ./dist
 referencias
 workout-plan.json
+
+# Build
+dist
