@@ -50,8 +50,8 @@ await app.register(fastifySwagger, {
     },
     servers: [
       {
-        description: "Localhost",
-        url: env.API_BASE_URL || "http://localhost:8081",
+        description: "API Base URL",
+        url: env.API_BASE_URL,
       },
     ],
   },
@@ -59,7 +59,7 @@ await app.register(fastifySwagger, {
 });
 
 await app.register(fastifyCors, {
-  origin: [env.WEB_APP_BASE_URL || "http://localhost:8081"],
+  origin: [env.WEB_APP_BASE_URL],
   credentials: true,
 });
 
