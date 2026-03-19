@@ -20,7 +20,7 @@ RUN npm run build && cp -r src/generated dist/generated
 # ------- Production -------
 FROM base AS production
 
-RUN npm ci --only=production
+RUN npm ci --omit=dev --ignore-scripts
 
 COPY --from=build /app/dist ./dist
 
