@@ -21,7 +21,7 @@ A modern API for managing workouts, personal metrics, statistics and an AI-power
 - **Prisma** – ORM with PostgreSQL
 - **Better Auth** – authentication & authorization
 - **Zod** – schema validation
-- **OpenAI & `ai` SDK** – AI assistant integration
+- **Google AI & `ai` SDK** – AI assistant integration
 - **Day.js** – date manipulation
 - **Docker Compose** – development containers
 
@@ -34,7 +34,8 @@ A modern API for managing workouts, personal metrics, statistics and an AI-power
 - `@scalar/fastify-api-reference`
 - `fastify-type-provider-zod`
 - `better-auth`, `dayjs`, `zod`, `dotenv`, `tsx`
-- `ai`, `@ai-sdk/openai`
+- `ai`, `@ai-sdk/google`, `@ai-sdk/openai`
+- `pino-pretty`
 
 ### Development
 
@@ -55,7 +56,7 @@ A modern API for managing workouts, personal metrics, statistics and an AI-power
 
    ```bash
    git clone https://github.com/YudiYamada/yamada-training-api.git
-   cd yamada-training
+   cd yamada-training-api
    ```
 
 2. **Install dependencies**
@@ -73,11 +74,14 @@ A modern API for managing workouts, personal metrics, statistics and an AI-power
    Update the file with at least:
 
    ```env
-   DATABASE_URL=postgresql://user:password@localhost:5432/yamada_training
-   NODE_ENV=development
+   DATABASE_URL="postgresql://postgres:password@localhost:5432/yamada-training-api"
+   BETTER_AUTH_SECRET=your-better-auth-secret
+   BETTER_AUTH_URL=http://localhost:8081
+   GOOGLE_CLIENT_ID=your-google-client-id
+   GOOGLE_CLIENT_SECRET=your-google-client-secret
+   GOOGLE_GENERATIVE_AI_API_KEY=your-google-generative-ai-api-key
+   WEB_APP_BASE_URL="localhost:3000"
    PORT=8081
-   OPENAI_API_KEY=sk-...          # required for /ai endpoint
-   CORS_ORIGIN=http://localhost:3000  # optional
    ```
 
 4. **Start services**
@@ -143,14 +147,14 @@ yamada-training/
 
 Entities defined in `prisma/schema.prisma` include:
 
-| Model             | Description                                      |
-|------------------|--------------------------------------------------|
-| User             | application user with auth info and metrics      |
-| WorkoutPlan      | named plan containing multiple WorkoutDays       |
-| WorkoutDay       | single day (weekday, rests, exercises, sessions) |
-| WorkoutExercise  | exercise details (sets, reps, order, rest time)  |
-| WorkoutSession   | record of a performed day (start/completion)
-| Session/Account/Verification | auth infrastructure models         |
+| Model                        | Description                                      |
+| ---------------------------- | ------------------------------------------------ |
+| User                         | application user with auth info and metrics      |
+| WorkoutPlan                  | named plan containing multiple WorkoutDays       |
+| WorkoutDay                   | single day (weekday, rests, exercises, sessions) |
+| WorkoutExercise              | exercise details (sets, reps, order, rest time)  |
+| WorkoutSession               | record of a performed day (start/completion)     |
+| Session/Account/Verification | auth infrastructure models                       |
 
 ---
 
@@ -176,21 +180,21 @@ npx prettier --write src/
 
 Authentication required for all routes except the root health check.
 
-| Method | Endpoint                                                                 | Description                                 |
-|--------|-------------------------------------------------------------------------|---------------------------------------------|
-| GET    | `/`                                                                     | health check                                |
-| **Auth proxy** | `/api/auth/*`                                                  | Better Auth endpoints (hidden)              |
-| GET    | `/home/:date`                                                           | home screen data for ISO date               |
-| GET    | `/me`                                                                    | fetch user training metrics                 |
-| PUT    | `/me`                                                                    | upsert training metrics                     |
-| GET    | `/stats?from=&to=`                                                       | workout statistics over a date range        |
-| GET    | `/workout-plans`                                                         | list workout plans (filter `active=true`)   |
-| POST   | `/workout-plans`                                                         | create plan                                 |
-| GET    | `/workout-plans/:workoutPlanId`                                         | retrieve plan                               |
-| GET    | `/workout-plans/:workoutPlanId/days/:workoutDayId`                     | retrieve specific day                       |
-| POST   | `/workout-plans/:planId/days/:dayId/sessions`                           | start plan session                          |
-| PATCH  | `/workout-plans/:planId/days/:dayId/sessions/:sessionId`                | complete/update session                     |
-| POST   | `/ai`                                                                    | chat with AI personal trainer               |
+| Method         | Endpoint                                                 | Description                               |
+| -------------- | -------------------------------------------------------- | ----------------------------------------- |
+| GET            | `/`                                                      | health check                              |
+| **Auth proxy** | `/api/auth/*`                                            | Better Auth endpoints (hidden)            |
+| GET            | `/home/:date`                                            | home screen data for ISO date             |
+| GET            | `/me`                                                    | fetch user training metrics               |
+| PUT            | `/me`                                                    | upsert training metrics                   |
+| GET            | `/stats?from=&to=`                                       | workout statistics over a date range      |
+| GET            | `/workout-plans`                                         | list workout plans (filter `active=true`) |
+| POST           | `/workout-plans`                                         | create plan                               |
+| GET            | `/workout-plans/:workoutPlanId`                          | retrieve plan                             |
+| GET            | `/workout-plans/:workoutPlanId/days/:workoutDayId`       | retrieve specific day                     |
+| POST           | `/workout-plans/:planId/days/:dayId/sessions`            | start plan session                        |
+| PATCH          | `/workout-plans/:planId/days/:dayId/sessions/:sessionId` | complete/update session                   |
+| POST           | `/ai`                                                    | chat with AI personal trainer             |
 
 > **Note:** `/ai` requires `OPENAI_API_KEY` to be set. See `src/routes/ai.ts` for the system prompt and tools.
 
@@ -237,7 +241,6 @@ docker-compose down        # stop and remove containers
 - Edit CORS origins in `src/index.ts` if your frontend uses a different host.
 - Run `npx prisma studio` to browse and modify the database directly.
 - Documentation updates automatically when the server starts.
-
 
 Enjoy building with Yamada Training! 💪
 

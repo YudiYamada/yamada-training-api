@@ -6,7 +6,7 @@ This document explains, step by step, how the **Yamada Training** backend is bui
 
 ## Phase 1 – Project Foundation & Tooling
 
-*Establish the language, style and basic workflows used across the repository.*
+_Establish the language, style and basic workflows used across the repository._
 
 1. **Initialize repository**
 
@@ -70,7 +70,6 @@ This document explains, step by step, how the **Yamada Training** backend is bui
    ```
 
 5. **Additional dev utilities**
-
    - `prisma` CLI (used for migrations)
    - `@types/*` packages whenever necessary
 
@@ -78,7 +77,7 @@ This document explains, step by step, how the **Yamada Training** backend is bui
 
 ## Phase 2 – Server & Validation
 
-*Bring up Fastify and ensure typed request/response handling.*
+_Bring up Fastify and ensure typed request/response handling._
 
 1. **Install runtime dependencies**
 
@@ -90,8 +89,25 @@ This document explains, step by step, how the **Yamada Training** backend is bui
 
    ```ts
    import "dotenv/config";
+
+   import fastifyCors from "@fastify/cors";
+   import fastifySwagger from "@fastify/swagger";
+   import fastifyApiReference from "@scalar/fastify-api-reference";
    import Fastify from "fastify";
-   import { serializerCompiler, validatorCompiler, ZodTypeProvider } from "fastify-type-provider-zod";
+   import {
+     jsonSchemaTransform,
+     serializerCompiler,
+     validatorCompiler,
+     ZodTypeProvider,
+   } from "fastify-type-provider-zod";
+
+   import { auth } from "./lib/auth.js";
+   import { env } from "./lib/env.js";
+   import { aiRoutes } from "./routes/ai.js";
+   import { homeRoutes } from "./routes/home.js";
+   import { meRoutes } from "./routes/me.js";
+   import { statsRoutes } from "./routes/stats.js";
+   import { workoutPlanRoutes } from "./routes/workout-plan.js";
 
    const app = Fastify({ logger: true });
    app.setValidatorCompiler(validatorCompiler);
@@ -99,7 +115,7 @@ This document explains, step by step, how the **Yamada Training** backend is bui
 
    // later: register routes, cors, swagger, etc.
 
-   await app.listen({ port: Number(process.env.PORT) || 8081 });
+   await app.listen({ port: Number(env.PORT) || 8081 });
    ```
 
 3. **Swagger & Scalar**
@@ -125,13 +141,26 @@ This document explains, step by step, how the **Yamada Training** backend is bui
    In `src/lib/auth.ts`:
 
    ```ts
-   import betterAuth from "better-auth";
+   import { betterAuth } from "better-auth";
+   import { prismaAdapter } from "better-auth/adapters/prisma";
+   import { openAPI } from "better-auth/plugins";
+
    import { prisma } from "./db.js";
-   import { prismaAdapter } from "@prisma/adapter-pg";
+   import { env } from "./env.js";
 
    export const auth = betterAuth({
-     database: prismaAdapter(prisma, { provider: "postgresql" }),
-     emailAndPassword: { enabled: true },
+     baseURL: env.API_BASE_URL,
+     trustedOrigins: [env.WEB_APP_BASE_URL],
+     socialProviders: {
+       google: {
+         prompt: "select_account",
+         clientId: env.GOOGLE_CLIENT_ID,
+         clientSecret: env.GOOGLE_CLIENT_SECRET,
+       },
+     },
+     database: prismaAdapter(prisma, {
+       provider: "postgresql",
+     }),
      plugins: [openAPI()],
    });
    ```
@@ -142,7 +171,7 @@ This document explains, step by step, how the **Yamada Training** backend is bui
    npm install @fastify/cors
    ```
 
-   Configure origins in `src/index.ts` (default `http://localhost:3000`).
+   Configure origins in `src/index.ts` using `WEB_APP_BASE_URL` (default `http://localhost:8081`).
 
 3. **Proxy auth routes**
 
@@ -210,12 +239,24 @@ This document explains, step by step, how the **Yamada Training** backend is bui
 1. **Install AI libraries**
 
    ```bash
-   npm install ai @ai-sdk/openai
+   npm install ai @ai-sdk/google
    ```
+
+   (Optional) If you want to use OpenAI instead of Google Gemini, add `@ai-sdk/openai`.
 
 2. **Environment**
 
-   Add `OPENAI_API_KEY` to `.env`.
+   Copy `.env.example` to `.env` and fill the required values. Key vars include:
+   - `PORT` (default 8081)
+   - `DATABASE_URL` (Postgres connection string)
+   - `BETTER_AUTH_SECRET` (session signing secret)
+   - `API_BASE_URL` (API base URL, used by Better Auth)
+   - `WEB_APP_BASE_URL` (frontend URL, used for CORS and auth callbacks)
+   - `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` (for OAuth login)
+   - `GOOGLE_GENERATIVE_AI_API_KEY` (used by the AI endpoint)
+
+   Optional:
+   - `OPENAI_API_KEY` (if you want to use OpenAI instead of Google Gemini)
 
 3. **System prompt & tools**
 
@@ -254,7 +295,6 @@ This document explains, step by step, how the **Yamada Training** backend is bui
    ```
 
 4. **Access docs**
-
    - Swagger JSON: `http://localhost:8081/swagger.json`
    - Scalar UI: `http://localhost:8081/docs`
 
@@ -266,19 +306,11 @@ This document explains, step by step, how the **Yamada Training** backend is bui
 
 ## Miscellaneous Notes
 
-- **CORS origin** can be overridden with `CORS_ORIGIN` env var.
+- **CORS origin** is driven by `WEB_APP_BASE_URL` (default `http://localhost:8081`).
+- **Auth base URL** is driven by `API_BASE_URL` (default `http://localhost:8081`).
 - **Data seeding** may be done manually via `npx prisma studio` or by writing a script using Prisma Client.
 - **Testing** is not included yet; consider adding Jest or Vitest for unit/e2e tests.
 - **Roadmap**: premium plans, progress tracking, sensor integration, mobile app.
-
----
-
-## Contributing
-
-1. Create a branch off `main`.
-2. Write code, adhere to ESLint/Prettier standards.
-3. Ensure types compile and routes pass validation.
-4. Commit and open a pull request.
 
 ---
 
